@@ -5,14 +5,18 @@ require 'sinatra'
 
 require 'haml'
 
-$playing = nil
+$last_line = nil
 
 def start_mplayer
-  $io = IO.popen "mplayer -fs -noconsolecontrols -idle -slave -really-quiet", 'r+'
+  $io = IO.popen "mplayer -fs -noconsolecontrols -idle -slave -quiet", 'r+'
+  $io_thread = Thread.new do
+    loop { $last_line = $io.readline; puts $last_line }
+  end
 end
 
 def play_file(path, append = false)
   $io.puts %Q{loadfile '#{path.sub /'/, %q{\\\'}}' #{append ? 1 : 0 }}
+#  $io.puts "sub_select -1"
 end
 
 def play_dir(path)
@@ -23,8 +27,20 @@ def play_dir(path)
   end
 end
 
+def step(dir)
+  $io.puts "pt_step #{dir}"
+end
+
 def toggle_pause
   $io.puts "pause"
+end
+
+def seek_rel length
+  $io.puts "seek #{length} 0"
+end
+
+def seek_time length
+  $io.puts "seek #{length} 2"
 end
 
 def stop_video
@@ -32,11 +48,8 @@ def stop_video
 end
 
 def show_playing()
-=begin
   $io.puts "get_file_name"
-  $io.readline
-=end
-  "THIS IS BROKEN"
+  $last_line
 end
 
 YOUTUBE_FILE = "/tmp/booble-youtube.flv"
@@ -55,7 +68,7 @@ def show_path path
   @ds.map! { |fn| fn.sub ROOT, '' }
   @fs.map! { |fn| fn.sub ROOT, '' }
 
-  @ds = ['./..'] + @ds unless ['/', ''].member? path
+  @path = path
 
   haml <<END
 %style{:type => 'text/css'}
@@ -63,7 +76,7 @@ def show_path path
     html { margin: 0 auto; }
     body { width: 80%; }
     p { }
-    .inline { display: inline; }
+    .button, .inline { display: inline; }
 
 #youtube
   %form{:method => 'post', :action => '/youtube'}
@@ -74,12 +87,25 @@ def show_path path
 #status
   Playing:
   = show_playing()
-  %form{:method => 'post', :action => '/pause'}
+  %form.button{:method => 'post', :action => '/pause'}
     %input{:type => 'submit', :value => 'play/pause'}
-  %form{:method => 'post', :action => '/stop'}
+  %form.button{:method => 'post', :action => '/stop'}
     %input{:type => 'submit', :value => 'stop'}
+  %form.button{:method => 'post', :action => '/backward'}
+    %input{:type => 'submit', :value => '<<'}
+  %form.button{:method => 'post', :action => '/forward'}
+    %input{:type => 'submit', :value => '>>'}
+  %form.button{:method => 'post', :action => '/seek'}
+    %input{:type => 'submit', :name => 'length', :value => '-10'}
+    %input{:type => 'submit', :name => 'length', :value => '+10'}
+  %form{:method => 'post', :action => '/seek'}
+    Seek to time (s):
+    %input{:name => 'length'}
+    %input{:type => 'submit', :value => 'seek'}
 
 %ul
+  %li
+    %a{:href => '/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } ..
 - @ds.sort.each do |d|
   %li
     %form.inline{:method => 'post', :action => '/playdir'}
@@ -117,6 +143,16 @@ post '/playdir' do
   redirect request.referer
 end
 
+post '/forward' do
+  step 1
+  redirect request.referer
+end
+
+post '/backward' do
+  step -1
+  redirect request.referer
+end
+
 post '/pause' do
   toggle_pause
   redirect request.referer
@@ -129,6 +165,15 @@ end
 
 post '/youtube' do
   play_youtube params[:url]
+  redirect request.referer
+end
+
+post '/seek' do
+  if ['+', '-'].map { |x| x[0] }.member? params[:length][0]
+    seek_rel params[:length]
+  else
+    seek_time params[:length]
+  end
   redirect request.referer
 end
 

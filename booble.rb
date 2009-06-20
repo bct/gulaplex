@@ -5,62 +5,81 @@ require 'sinatra'
 
 require 'haml'
 
-$last_line = nil
+ROOT = '/media'
 
-def start_mplayer
-  $io = IO.popen "mplayer -fs -noconsolecontrols -idle -slave -quiet", 'r+'
-  $io_thread = Thread.new do
-    loop { $last_line = $io.readline; puts $last_line }
+class MPlayer
+  def initialize
+    @playing = nil
   end
-end
 
-def play_file(path, append = false)
-  $io.puts %Q{loadfile '#{path.sub /'/, %q{\\\'}}' #{append ? 1 : 0 }}
-#  $io.puts "sub_select -1"
-end
+  def start
+    return if @io   # TODO: check that the pipe's actually still open.
 
-def play_dir(path)
-  Dir[ROOT + path + '/*'].sort.each do |fn|
-    if File.file? fn
-      play_file(fn, true)
+    @io = IO.popen "mplayer -fs -noconsolecontrols -idle -slave -quiet", 'r+'
+
+    @io_thread = Thread.new do
+      loop do
+        got_line(@io.readline)
+      end
+    end
+
+    @io_lock = Mutex.new
+  end
+
+  def got_line line
+    @io_lock.synchronize do
+      puts line
+      if line.match /^Playing (.*)\./
+        puts $1
+        @playing = $1
+      end
     end
   end
+
+  def run cmd
+    @io and @io.puts cmd
+  end
+
+  def play_file(path, append = false)
+    run %Q{loadfile '#{path.sub /'/, %q{\\\'}}' #{append ? 1 : 0 }}
+    # run "sub_select -1"
+  end
+
+  def play_dir(path)
+    Dir[ROOT + path + '/*'].sort.each do |fn|
+      if File.file? fn
+        play_file(fn, true)
+      end
+    end
+  end
+
+  # +1: forward
+  # -1: backward
+  def step(dir)
+    run "pt_step #{dir}"
+  end
+
+  def toggle_pause
+    run 'pause'
+  end
+
+  def seek_rel length
+    run "seek #{length} 0"
+  end
+
+  def seek_time length
+    run "seek #{length} 2"
+  end
+
+  def stop
+    run 'stop'
+    @playing = nil
+  end
+
+  def playing
+    @io_lock.synchronize { @playing }
+  end
 end
-
-def step(dir)
-  $io.puts "pt_step #{dir}"
-end
-
-def toggle_pause
-  $io.puts "pause"
-end
-
-def seek_rel length
-  $io.puts "seek #{length} 0"
-end
-
-def seek_time length
-  $io.puts "seek #{length} 2"
-end
-
-def stop_video
-  $io.puts "stop"
-end
-
-def show_playing()
-  $io.puts "get_file_name"
-  $last_line
-end
-
-YOUTUBE_FILE = "/tmp/booble-youtube.flv"
-
-def play_youtube(url)
-  File.delete(YOUTUBE_FILE) rescue nil
-  system("clive", "-o", YOUTUBE_FILE, url)
-  $io.puts("loadfile " + YOUTUBE_FILE)
-end
-
-ROOT = '/media'
 
 def show_path path
   @ds, @fs = Dir[ROOT + path + '/*'].partition { |x| File.directory? x }
@@ -73,20 +92,14 @@ def show_path path
   haml <<END
 %style{:type => 'text/css'}
   :plain
-    html { margin: 0 auto; }
-    body { width: 80%; }
-    p { }
+    body { margin: 5em auto; width: 80%; }
+    #status { padding: 1em; }
     .button, .inline { display: inline; }
 
-#youtube
-  %form{:method => 'post', :action => '/youtube'}
-    youtube URL:
-    %input{:name => 'url'}
-    %input{:type => 'submit', :value => '>'}
-
 #status
-  Playing:
-  = show_playing()
+  #playing
+    Playing:
+    = $mp.playing()
   %form.button{:method => 'post', :action => '/pause'}
     %input{:type => 'submit', :value => 'play/pause'}
   %form.button{:method => 'post', :action => '/stop'}
@@ -134,50 +147,47 @@ get /\/(.*)/ do |path|
 end
 
 post '/playfile' do
-  play_file(ROOT + params[:path])
+  $mp.play_file(ROOT + params[:path])
   redirect request.referer
 end
 
 post '/playdir' do
-  play_dir params[:path]
+  $mp.play_dir params[:path]
   redirect request.referer
 end
 
 post '/forward' do
-  step 1
+  $mp.step 1
   redirect request.referer
 end
 
 post '/backward' do
-  step -1
+  $mp.step -1
   redirect request.referer
 end
 
 post '/pause' do
-  toggle_pause
+  $mp.toggle_pause
   redirect request.referer
 end
 
 post '/stop' do
-  stop_video
-  redirect request.referer
-end
-
-post '/youtube' do
-  play_youtube params[:url]
+  $mp.stop
   redirect request.referer
 end
 
 post '/seek' do
   if ['+', '-'].map { |x| x[0] }.member? params[:length][0]
-    seek_rel params[:length]
+    $mp.seek_rel params[:length]
   else
-    seek_time params[:length]
+    $mp.seek_time params[:length]
   end
   redirect request.referer
 end
 
 if __FILE__ == $0
   ENV['DISPLAY'] = ':0'
-  start_mplayer()
+
+  $mp ||= MPlayer.new
+  $mp.start
 end

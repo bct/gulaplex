@@ -8,8 +8,11 @@ require 'haml'
 ROOT = '/media'
 
 class MPlayer
+  attr_reader :playlist
+
   def initialize
     @playing = nil
+    @playlist = []
   end
 
   def start
@@ -41,8 +44,14 @@ class MPlayer
   end
 
   def play_file(path, append = false)
-    run %Q{loadfile '#{path.sub /'/, %q{\\\'}}' #{append ? 1 : 0 }}
+    run %Q{loadfile '#{path.gsub /'/, %q{\\\'}}' #{append ? 1 : 0 }}
     # run "sub_select -1"
+
+    if append
+      @playlist << path
+    else
+      @playlist = [ path ]
+    end
   end
 
   def play_dir(path)
@@ -92,9 +101,17 @@ def show_path path
   haml <<END
 %style{:type => 'text/css'}
   :plain
-    body { margin: 5em auto; width: 80%; }
-    #status { padding: 1em; }
+    body { margin: 5em auto; width: 80%; background: white; }
+    #status { padding: 1em; border: 1px solid black; }
     .button, .inline { display: inline; }
+    input[type=submit] { background: #ccc; border: 1px solid black; }
+    #playlist { float: right; width: 30%; border: 1px solid black; }
+
+#playlist
+  %strong Playlist
+  %ul
+    - $mp.playlist.each do |file|
+      %li= file
 
 #status
   #playing
@@ -118,23 +135,23 @@ def show_path path
 
 %ul
   %li
-    %a{:href => '/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } ..
-- @ds.sort.each do |d|
-  %li
-    %form.inline{:method => 'post', :action => '/playdir'}
-      %input{:type => 'hidden', :name => 'path', :value => d }
-      %input{:type => 'submit', :value => '>'}
+    %a{:href => '/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
+  - @ds.sort.each do |d|
+    %li
+      %form.inline{:method => 'post', :action => '/playdir'}
+        %input{:type => 'hidden', :name => 'path', :value => d }
+        %input{:type => 'submit', :value => '>'}
 
-    %a{:href => d }= d
+      %a{:href => d }= d
 
 %ul
-- @fs.sort.each do |f|
-  %li
-    %form.inline{:method => 'post', :action => '/playfile'}
-      %input{:type => 'hidden', :name => 'path', :value => f }
-      %input{:type => 'submit', :value => '>'}
+  - @fs.sort.each do |f|
+    %li
+      %form.inline{:method => 'post', :action => '/playfile'}
+        %input{:type => 'hidden', :name => 'path', :value => f }
+        %input{:type => 'submit', :value => '>'}
 
-    %span= f
+      %span= f
 END
 end
 

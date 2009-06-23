@@ -13,6 +13,7 @@ class MPlayer
   def initialize
     @playing = nil
     @playlist = []
+    @percent_pos = 0
   end
 
   def start
@@ -33,8 +34,9 @@ class MPlayer
     @io_lock.synchronize do
       puts line
       if line.match /^Playing (.*)\./
-        puts $1
         @playing = $1
+      elsif line.match /^ANS_PERCENT_POSITION=(.*)/
+        @percent_pos = $1
       end
     end
   end
@@ -72,21 +74,35 @@ class MPlayer
     run 'pause'
   end
 
-  def seek_rel length
-    run "seek #{length} 0"
+  def seek_rel pos
+    run "seek #{pos} 0"
   end
 
-  def seek_time length
-    run "seek #{length} 2"
+  def seek_time pos
+    run "seek #{pos} 2"
+  end
+
+  def seek_percent percent
+    run "seek #{percent} 1"
   end
 
   def stop
     run 'stop'
     @playing = nil
+    @playlist = []
   end
 
   def playing
     @io_lock.synchronize { @playing }
+  end
+
+  def percent_pos
+    return 0 unless playing
+
+    run 'get_percent_pos'
+    @io_lock.synchronize do
+      @percent_pos
+    end
   end
 end
 
@@ -98,6 +114,8 @@ def show_path path
 
   @path = path
 
+  @slider_pos = $mp.percent_pos
+
   haml <<END
 %style{:type => 'text/css'}
   :plain
@@ -106,6 +124,28 @@ def show_path path
     .button, .inline { display: inline; }
     input[type=submit] { background: #ccc; border: 1px solid black; }
     #playlist { float: right; width: 30%; border: 1px solid black; }
+    #slider { margin: 1em }
+
+%link{:rel => 'stylesheet', :type => 'text/css', :href => 'css/theme/jquery-ui-1.7.2.custom.css'}
+
+%script{:type => 'text/javascript', :src => 'js/jquery-1.3.2.min.js' }
+%script{:type => 'text/javascript', :src => 'js/jquery-ui-1.7.2.custom.min.js' }
+
+%script{:type => 'text/javascript'}
+  var sliderPos = #{@slider_pos};
+  :plain
+    function seekPercent(percent) {
+      $.post("/seek", { pos: percent + "%"});
+    }
+
+    $(document).ready(function(){
+      $("#slider").slider({
+        value: sliderPos,
+        stop: function(event, ui) { seekPercent(ui.value); }
+      });
+    });
+
+#slider
 
 #playlist
   %strong Playlist
@@ -126,12 +166,8 @@ def show_path path
   %form.button{:method => 'post', :action => '/forward'}
     %input{:type => 'submit', :value => '>>'}
   %form.button{:method => 'post', :action => '/seek'}
-    %input{:type => 'submit', :name => 'length', :value => '-10'}
-    %input{:type => 'submit', :name => 'length', :value => '+10'}
-  %form{:method => 'post', :action => '/seek'}
-    Seek to time (s):
-    %input{:name => 'length'}
-    %input{:type => 'submit', :value => 'seek'}
+    %input{:type => 'submit', :name => 'pos', :value => '-10'}
+    %input{:type => 'submit', :name => 'pos', :value => '+10'}
 
 %ul
   %li
@@ -194,10 +230,12 @@ post '/stop' do
 end
 
 post '/seek' do
-  if ['+', '-'].map { |x| x[0] }.member? params[:length][0]
-    $mp.seek_rel params[:length]
+  if ['+', '-'].map { |x| x[0] }.member? params[:pos][0]
+    $mp.seek_rel params[:pos]
+  elsif params[:pos][-1].chr == '%'
+    $mp.seek_percent params[:pos][0..-2]
   else
-    $mp.seek_time params[:length]
+    $mp.seek_time params[:pos]
   end
   redirect request.referer
 end

@@ -126,10 +126,10 @@ def show_path path
     #playlist { float: right; width: 30%; border: 1px solid black; }
     #slider { margin: 1em }
 
-%link{:rel => 'stylesheet', :type => 'text/css', :href => 'css/theme/jquery-ui-1.7.2.custom.css'}
+%link{:rel => 'stylesheet', :type => 'text/css', :href => '/css/theme/jquery-ui-1.7.2.custom.css'}
 
-%script{:type => 'text/javascript', :src => 'js/jquery-1.3.2.min.js' }
-%script{:type => 'text/javascript', :src => 'js/jquery-ui-1.7.2.custom.min.js' }
+%script{:type => 'text/javascript', :src => '/js/jquery-1.3.2.min.js' }
+%script{:type => 'text/javascript', :src => '/js/jquery-ui-1.7.2.custom.min.js' }
 
 %script{:type => 'text/javascript'}
   var sliderPos = #{@slider_pos};

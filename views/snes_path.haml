@@ -1,0 +1,15 @@
+%ul
+  %li
+    %a{:href => '/media/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
+  - @ds.sort.each do |d|
+    %li
+      %a{:href => '/media' + d }= d
+
+%ul
+  - @fs.sort.each do |f|
+    %li
+      %form.inline{:method => 'post', :action => '/snes/playing'}
+        %input{:type => 'hidden', :name => 'rom', :value => f }
+        %input{:type => 'submit', :value => '>'}
+
+      %span= f

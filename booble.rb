@@ -117,97 +117,7 @@ def show_media_path path
 
   @slider_pos = $mp.percent_pos
 
-  haml <<END
-%style{:type => 'text/css'}
-  :plain
-    body { margin: 5em auto; width: 80%; background: white; }
-    #status { padding: 1em; border: 1px solid black; }
-    .button, .inline { display: inline; }
-    input[type=submit] { background: #ccc; border: 1px solid black; }
-    #playlist { float: right; width: 30%; border: 1px solid black; }
-    #slider { margin: 1em }
-
-%link{:rel => 'stylesheet', :type => 'text/css', :href => '/css/theme/jquery-ui-1.7.2.custom.css'}
-
-%script{:type => 'text/javascript', :src => '/js/jquery-1.3.2.min.js' }
-%script{:type => 'text/javascript', :src => '/js/jquery-ui-1.7.2.custom.min.js' }
-
-%script{:type => 'text/javascript'}
-  var sliderPos = #{@slider_pos};
-  var updatePeriod = 10 * 1000;
-
-  :plain
-    function seekPercent(percent) {
-      $.post("/playtime", { pos: percent + "%"});
-    }
-
-    function updatePercent() {
-      $.get('/playtime', {}, function(data, textStatus) {
-        $("#slider").slider('option', 'value', data);
-      });
-
-      setTimeout(updatePercent, updatePeriod);
-    }
-
-    $(document).ready(function(){
-      $("#slider").slider({
-        value: sliderPos,
-        stop: function(event, ui) { seekPercent(ui.value); }
-      });
-
-      setTimeout(updatePercent, updatePeriod);
-    });
-
-%ul
-  %li
-    %a{:href => '/media/'} media
-  %li
-    %a{:href => '/snes/'} snes
-
-#slider
-
-#playlist
-  %strong Playlist
-  %ul
-    - $mp.playlist.each do |file|
-      %li= file
-
-#status
-  #playing
-    Playing:
-    = $mp.playing()
-  %form.button{:method => 'post', :action => '/pause'}
-    %input{:type => 'submit', :value => 'play/pause'}
-  %form.button{:method => 'post', :action => '/stop'}
-    %input{:type => 'submit', :value => 'stop'}
-  %form.button{:method => 'post', :action => '/backward'}
-    %input{:type => 'submit', :value => '<<'}
-  %form.button{:method => 'post', :action => '/forward'}
-    %input{:type => 'submit', :value => '>>'}
-  %form.button{:method => 'post', :action => '/playtime'}
-    %input{:type => 'submit', :name => 'pos', :value => '-10'}
-    %input{:type => 'submit', :name => 'pos', :value => '+10'}
-
-%ul
-  %li
-    %a{:href => '/media/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
-  - @ds.sort.each do |d|
-    %li
-      %form.inline{:method => 'post', :action => '/playdir'}
-        %input{:type => 'hidden', :name => 'path', :value => '/media' + d }
-        %input{:type => 'submit', :value => '>'}
-
-      %a{:href => '/media' + d }= d
-
-%ul
-  - @fs.sort.each do |f|
-    %li
-      %form.inline{:method => 'post', :action => '/playfile'}
-        %input{:type => 'hidden', :name => 'path', :value => f }
-        %input{:type => 'submit', :value => '>'}
-
-      %span= f
-END
+  haml :media_path
 end
 
 def show_snes_path path
@@ -218,23 +128,7 @@ def show_snes_path path
 
   @path = path
 
-  haml <<END
-%ul
-  %li
-    %a{:href => '/media/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
-  - @ds.sort.each do |d|
-    %li
-      %a{:href => '/media' + d }= d
-
-%ul
-  - @fs.sort.each do |f|
-    %li
-      %form.inline{:method => 'post', :action => '/snes/playing'}
-        %input{:type => 'hidden', :name => 'rom', :value => f }
-        %input{:type => 'submit', :value => '>'}
-
-      %span= f
-END
+  haml :snes_path
 end
 
 get '/' do

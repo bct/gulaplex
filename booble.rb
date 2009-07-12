@@ -5,7 +5,8 @@ require 'sinatra'
 
 require 'haml'
 
-ROOT = '/media'
+MEDIA_ROOT = '/media'
+SNES_ROOT = '/media/software/roms/snes'
 
 class MPlayer
   attr_reader :playlist
@@ -42,7 +43,7 @@ class MPlayer
   end
 
   def run cmd
-    @io and @io.puts cmd
+    @io.puts cmd
   end
 
   def play_file(path, append = false)
@@ -57,7 +58,7 @@ class MPlayer
   end
 
   def play_dir(path)
-    Dir[ROOT + path + '/*'].sort.each do |fn|
+    Dir[MEDIA_ROOT + path + '/*'].sort.each do |fn|
       if File.file? fn
         play_file(fn, true)
       end
@@ -106,11 +107,11 @@ class MPlayer
   end
 end
 
-def show_path path
-  @ds, @fs = Dir[ROOT + path + '/*'].partition { |x| File.directory? x }
+def show_media_path path
+  @ds, @fs = Dir[MEDIA_ROOT + path + '/*'].partition { |x| File.directory? x }
 
-  @ds.map! { |fn| fn.sub ROOT, '' }
-  @fs.map! { |fn| fn.sub ROOT, '' }
+  @ds.map! { |fn| fn.sub MEDIA_ROOT, '' }
+  @fs.map! { |fn| fn.sub MEDIA_ROOT, '' }
 
   @path = path
 
@@ -145,6 +146,12 @@ def show_path path
       });
     });
 
+%ul
+  %li
+    %a{:href => '/media/'} media
+  %li
+    %a{:href => '/snes/'} snes
+
 #slider
 
 #playlist
@@ -171,14 +178,14 @@ def show_path path
 
 %ul
   %li
-    %a{:href => '/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
+    %a{:href => '/media/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
   - @ds.sort.each do |d|
     %li
       %form.inline{:method => 'post', :action => '/playdir'}
-        %input{:type => 'hidden', :name => 'path', :value => d }
+        %input{:type => 'hidden', :name => 'path', :value => '/media' + d }
         %input{:type => 'submit', :value => '>'}
 
-      %a{:href => d }= d
+      %a{:href => '/media' + d }= d
 
 %ul
   - @fs.sort.each do |f|
@@ -191,16 +198,47 @@ def show_path path
 END
 end
 
-get '/' do
-  show_path ''
+def show_snes_path path
+  @ds, @fs = Dir[MEDIA_ROOT + path + '/*'].partition { |x| File.directory? x }
+
+  @ds.map! { |fn| fn.sub SNES_ROOT, '' }
+  @fs.map! { |fn| fn.sub SNES_ROOT, '' }
+
+  @path = path
+
+  haml <<END
+%ul
+  %li
+    %a{:href => '/media/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
+  - @ds.sort.each do |d|
+    %li
+      %a{:href => '/media' + d }= d
+
+%ul
+  - @fs.sort.each do |f|
+    %li
+      %form.inline{:method => 'post', :action => '/snes/playing'}
+        %input{:type => 'hidden', :name => 'rom', :value => f }
+        %input{:type => 'submit', :value => '>'}
+
+      %span= f
+END
 end
 
-get /\/(.*)/ do |path|
-  show_path('/' + path)
+get '/' do
+  redirect '/media/'
+end
+
+get /media\/(.*)/ do |path|
+  show_media_path('/' + path)
+end
+
+get /snes\/(.*)/ do |path|
+  show_snes_path('/' + path)
 end
 
 post '/playfile' do
-  $mp.play_file(ROOT + params[:path])
+  $mp.play_file(MEDIA_ROOT + params[:path])
   redirect request.referer
 end
 
@@ -226,6 +264,12 @@ end
 
 post '/stop' do
   $mp.stop
+  redirect request.referer
+end
+
+post '/snes/playing' do
+  $mp.stop
+  system('snes9x', '-joydev1', '/dev/input/js0', MEDIA_ROOT + params[:path])
   redirect request.referer
 end
 

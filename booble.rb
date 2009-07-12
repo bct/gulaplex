@@ -134,9 +134,19 @@ def show_media_path path
 
 %script{:type => 'text/javascript'}
   var sliderPos = #{@slider_pos};
+  var updatePeriod = 10 * 1000;
+
   :plain
     function seekPercent(percent) {
-      $.post("/seek", { pos: percent + "%"});
+      $.post("/playtime", { pos: percent + "%"});
+    }
+
+    function updatePercent() {
+      $.get('/playtime', {}, function(data, textStatus) {
+        $("#slider").slider('option', 'value', data);
+      });
+
+      setTimeout(updatePercent, updatePeriod);
     }
 
     $(document).ready(function(){
@@ -144,6 +154,8 @@ def show_media_path path
         value: sliderPos,
         stop: function(event, ui) { seekPercent(ui.value); }
       });
+
+      setTimeout(updatePercent, updatePeriod);
     });
 
 %ul
@@ -172,7 +184,7 @@ def show_media_path path
     %input{:type => 'submit', :value => '<<'}
   %form.button{:method => 'post', :action => '/forward'}
     %input{:type => 'submit', :value => '>>'}
-  %form.button{:method => 'post', :action => '/seek'}
+  %form.button{:method => 'post', :action => '/playtime'}
     %input{:type => 'submit', :name => 'pos', :value => '-10'}
     %input{:type => 'submit', :name => 'pos', :value => '+10'}
 
@@ -273,7 +285,11 @@ post '/snes/playing' do
   redirect request.referer
 end
 
-post '/seek' do
+get '/playtime' do
+  $mp.percent_pos
+end
+
+post '/playtime' do
   if ['+', '-'].map { |x| x[0] }.member? params[:pos][0]
     $mp.seek_rel params[:pos]
   elsif params[:pos][-1].chr == '%'

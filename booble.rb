@@ -14,6 +14,7 @@ class MPlayer
   def initialize
     @playing = nil
     @paused = false
+    @going = false
     @playlist = []
     @percent_pos = 0
   end
@@ -34,35 +35,62 @@ class MPlayer
 
   def got_line line
     @io_lock.synchronize do
-      puts line
-      if line.match /^Playing (.*)\./
-        @playing = $1
-      elsif line.match /^ANS_PERCENT_POSITION=(.*)/
+      puts "<< " + line.inspect
+      if line.match /^ANS_PERCENT_POSITION=(.*)/
         @percent_pos = $1
+      elsif line.match /^Starting playback\.\.\./
+        @going = true
       end
+    end
+
+    # this needs to be outside the lock because otherwise it deadlocks
+    if line == "\n" and @going
+      @going = false
+      puts "---DONE---"
+      play_next()
     end
   end
 
   def run cmd
+    puts ">> " + cmd.inspect
     @paused = false # all commands seem to unpause this.
     @io.puts cmd
   end
 
-  def play_file(path, append = false)
-    run %Q{loadfile '#{path.gsub /'/, %q{\\\'}}' #{append ? 1 : 0 }}
-    # run "sub_select -1"
+  def play_next
+    next_idx = @playlist.index(@playing)
+    @playing = nil
+    return unless next_idx
 
-    if append
-      @playlist << path
-    else
-      @playlist = [ path ]
+    next_file = @playlist[next_idx + 1]
+    return unless next_file
+
+    play_file next_file
+  end
+
+  def play_file(path, append = false)
+    @going = false
+
+    @io_lock.synchronize do
+      @playing = path
+      run %Q{loadfile '#{path.gsub /'/, %q{\\\'}}' 0}
+    end
+
+    # run "sub_select -1"
+  end
+
+  def pl_append path
+    @playlist << path
+
+    if @playing.nil?
+      play_file @playlist.first
     end
   end
 
-  def play_dir(path)
+  def pl_append_dir(path)
     Dir[path + '/*'].sort.each do |fn|
       if File.file? fn
-        play_file(fn, true)
+        pl_append(fn)
       end
     end
   end
@@ -70,7 +98,7 @@ class MPlayer
   # +1: forward
   # -1: backward
   def step(dir)
-    run "pt_step #{dir}"
+    play_next
   end
 
   def toggle_pause
@@ -105,10 +133,10 @@ class MPlayer
     return 0 unless playing
     return @percent_pos if @paused
 
-    run 'get_percent_pos'
     @io_lock.synchronize do
-      @percent_pos
+      run 'get_percent_pos'
     end
+    @percent_pos
   end
 end
 
@@ -149,12 +177,12 @@ get /snes\/(.*)/ do |path|
 end
 
 post '/playfile' do
-  $mp.play_file(MEDIA_ROOT + params[:path])
-  redirect request.referer
+  $mp.pl_append(MEDIA_ROOT + params[:path])
+  redirect request.referer, 303
 end
 
 post '/playdir' do
-  $mp.play_dir params[:path]
+  $mp.pl_append_dir params[:path]
   redirect request.referer
 end
 
@@ -170,7 +198,7 @@ end
 
 post '/pause' do
   $mp.toggle_pause
-  redirect request.referer
+  redirect request.referer, 303
 end
 
 post '/stop' do

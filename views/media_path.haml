@@ -49,7 +49,7 @@
   %strong Playlist
   %ul
     - $mp.playlist.each do |file|
-      %li= file
+      %li= File.basename(file)
 
 #status
   #playing

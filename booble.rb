@@ -13,6 +13,7 @@ class MPlayer
 
   def initialize
     @playing = nil
+    @paused = false
     @playlist = []
     @percent_pos = 0
   end
@@ -43,6 +44,7 @@ class MPlayer
   end
 
   def run cmd
+    @paused = false # all commands seem to unpause this.
     @io.puts cmd
   end
 
@@ -72,7 +74,9 @@ class MPlayer
   end
 
   def toggle_pause
+    was_paused = @paused
     run 'pause'
+    @paused = !was_paused
   end
 
   def seek_rel pos
@@ -99,6 +103,7 @@ class MPlayer
 
   def percent_pos
     return 0 unless playing
+    return @percent_pos if @paused
 
     run 'get_percent_pos'
     @io_lock.synchronize do

@@ -60,7 +60,7 @@ class MPlayer
   end
 
   def play_dir(path)
-    Dir[MEDIA_ROOT + path + '/*'].sort.each do |fn|
+    Dir[path + '/*'].sort.each do |fn|
       if File.file? fn
         play_file(fn, true)
       end

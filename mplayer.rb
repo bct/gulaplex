@@ -59,12 +59,12 @@ class MPlayer
 
   def pl_append_dir path
     if File.directory?(path + '/VIDEO_TS')
-      pl.append(path)
+      pl_append(path)
     end
 
     Dir[path + '/*'].sort.each do |fn|
-      if File.file? n
-        pl.append(fn)
+      if File.file? fn
+        pl_append(fn)
       end
     end
   end
@@ -93,6 +93,7 @@ class MPlayer
   end
 
   def percent_pos
+    return 0 unless @status
     # if it's paused, avoid running a command (it will unpause it)
     return @status.percent_pos if @paused
 
@@ -113,6 +114,7 @@ class MPlayer
   ensure
     @io = nil
     @playing = nil
+    @status = nil
   end
 
   def nav diff
@@ -144,10 +146,4 @@ class MPlayer
       run "seek #{pos} 2"
     end
   end
-end
-
-$mp = MPlayer.new
-
-Dir['/home/data/music/Skinny Puppy/Last Rights/*'].sort.each do |file|
-  $mp.pl_append(file)
 end

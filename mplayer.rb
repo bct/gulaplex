@@ -15,7 +15,9 @@ class Status
     @thread = Thread.new do
       puts "starting"
       @io.each_line { |line| self.got_line(line) }
-      mp.next # i suspect this will break horribly occasionally
+      unless mp.next # i suspect this will break horribly occasionally
+        mp.stop
+      end
     end
   end
 

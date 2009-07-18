@@ -4,12 +4,6 @@ html {
   font-size: 0.8em;
 }
 
-a {
-  color: #99bbaa;
-  font-weight: bold;
-  text-decoration: none;
-}
-
 body {
   margin: 0 auto;
   padding: 5em 2em;
@@ -48,4 +42,15 @@ input[type=submit] {
 #slider {
   clear: both;
   margin: 1em;
+}
+
+a, #tree span {
+  cursor: pointer;
+  color: #99bbaa;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.file > span:hover {
+  text-decoration: underline;
 }

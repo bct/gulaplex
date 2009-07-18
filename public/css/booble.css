@@ -1,0 +1,50 @@
+html {
+  background: #887766;
+  color: #dddddd;
+}
+
+a {
+  color: #99bbaa;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+body {
+  margin: 0 auto;
+  padding: 5em 2em;
+  width: 60%;
+  background: #554444;
+  border-left:  5px solid #222211;
+  border-right: 5px solid #222211;
+}
+
+#header strong {
+  font-size: 2em;
+  color: #99bbaa;
+}
+
+#header ul {
+  float: right;
+}
+
+#status {
+  padding: 1em;
+}
+
+.button, .inline {
+  display: inline;
+}
+
+input[type=submit] {
+  background: #ccc;
+}
+
+#playlist {
+  float: right;
+  width: 30%;
+}
+
+#slider {
+  clear: both;
+  margin: 1em;
+}

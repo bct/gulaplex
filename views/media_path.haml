@@ -1,12 +1,4 @@
-%style{:type => 'text/css'}
-  :plain
-    body { margin: 5em auto; width: 80%; background: white; }
-    #status { padding: 1em; border: 1px solid black; }
-    .button, .inline { display: inline; }
-    input[type=submit] { background: #ccc; border: 1px solid black; }
-    #playlist { float: right; width: 30%; border: 1px solid black; background: white; }
-    #slider { margin: 1em }
-
+%link{:rel => 'stylesheet', :type => 'text/css', :href => '/css/booble.css'}
 %link{:rel => 'stylesheet', :type => 'text/css', :href => '/css/theme/jquery-ui-1.7.2.custom.css'}
 
 %script{:type => 'text/javascript', :src => '/js/jquery-1.3.2.min.js' }
@@ -37,11 +29,13 @@
     setTimeout(updatePercent, updatePeriod);
   });
 
-%ul
-  %li
-    %a{:href => '/media/'} media
-  %li
-    %a{:href => '/snes/'} snes
+#header
+  %ul
+    %li
+      %a{:href => '/media/'} media
+    %li
+      %a{:href => '/snes/'} snes
+  %strong booble
 
 #slider
 

@@ -7,20 +7,25 @@ require 'haml'
 
 require 'mplayer'
 
+require 'json'
+
 MEDIA_ROOT = '/media'
 SNES_ROOT = '/media/software/roms/snes'
 
 def show_media_path path
-  @ds, @fs = Dir[MEDIA_ROOT + path + '/*'].partition { |x| File.directory? x }
-
-  @ds.map! { |fn| fn.sub MEDIA_ROOT, '' }
-  @fs.map! { |fn| fn.sub MEDIA_ROOT, '' }
-
-  @path = path
-
+  @root_tree = json_media_path(path)
   @slider_pos = $mp.percent_pos
 
   haml :media_path
+end
+
+def json_media_path path
+  ds, fs = Dir[MEDIA_ROOT + path + '/*'].partition { |x| File.directory? x }
+
+  ds.map! { |fn| fn.sub MEDIA_ROOT, '' }
+  fs.map! { |fn| fn.sub MEDIA_ROOT, '' }
+
+  { 'directories' => ds.sort, 'files' => fs.sort }.to_json
 end
 
 def show_snes_path path
@@ -39,7 +44,13 @@ get '/' do
 end
 
 get /media\/(.*)/ do |path|
-  show_media_path('/' + path)
+  if request.xhr?
+    content_type :json
+
+    json_media_path(path)
+  else
+    show_media_path(path)
+  end
 end
 
 get /snes\/(.*)/ do |path|

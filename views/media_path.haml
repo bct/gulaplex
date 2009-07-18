@@ -7,6 +7,7 @@
 :javascript
   var sliderPos = #{@slider_pos};
   var updatePeriod = 10 * 1000;
+  var rootTree = #{@root_tree};
 
   function seekPercent(percent) {
     $.post("/playtime", { pos: percent + "%"});
@@ -20,6 +21,56 @@
     setTimeout(updatePercent, updatePeriod);
   }
 
+  function toggleExpandDir() {
+    var parent = $(this).parent();
+    var subtree = parent.children("ul");
+
+    if(subtree.length != 0) {
+      subtree.remove();
+    } else {
+      var url = "/media/" + $(this).text();
+
+      $.getJSON(url, function(data){
+        addSubtree(parent, data);
+      });
+    }
+  }
+
+  function playFile() {
+    var path = $(this).text();
+    $.post("/playfile", { path: path });
+  }
+
+  function addSubtree(parentEl, subtree) {
+    var dirUl = $("<ul/>");
+    parentEl.append(dirUl);
+
+    var fileUl = $("<ul/>");
+    parentEl.append(fileUl);
+
+    $.each(subtree.directories, function(i, path) {
+      var sub = $("<li class='directory'/>");
+      var name = $("<span/>");
+
+      name.append(path);
+      sub.append(name);
+      dirUl.append(sub);
+
+      name.click(toggleExpandDir);
+    });
+
+    $.each(subtree.files, function(i, path) {
+      var sub = $("<li class='file'/>");
+      var name = $("<span/>");
+
+      name.append(path);
+      sub.append(name);
+      fileUl.append(sub);
+
+      name.click(playFile);
+    });
+  }
+
   $(document).ready(function(){
     $("#slider").slider({
       value: sliderPos,
@@ -27,6 +78,8 @@
     });
 
     setTimeout(updatePercent, updatePeriod);
+
+    addSubtree($("#tree"), rootTree);
   });
 
 #header
@@ -35,8 +88,7 @@
       %a{:href => '/media/'} media
     %li
       %a{:href => '/snes/'} snes
-  %strong
-    %a{:href => '/img/booby.jpg'} booble
+  %strong booble
 
 #slider
 
@@ -63,22 +115,4 @@
   %form.button{:method => 'post', :action => '/forward'}
     %input{:type => 'submit', :value => '>>'}
 
-%ul
-  %li
-    %a{:href => '/media/' + @path.split('/')[0..-2].reject{|x|x.empty?}.join('/') } updir
-  - @ds.sort.each do |d|
-    %li
-      %form.inline{:method => 'post', :action => '/playdir'}
-        %input{:type => 'hidden', :name => 'path', :value => '/media' + d }
-        %input{:type => 'submit', :value => '>'}
-
-      %a{:href => '/media' + d }= d
-
-%ul
-  - @fs.sort.each do |f|
-    %li
-      %form.inline{:method => 'post', :action => '/playfile'}
-        %input{:type => 'hidden', :name => 'path', :value => f }
-        %input{:type => 'submit', :value => '>'}
-
-      %span= f
+#tree

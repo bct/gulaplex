@@ -107,7 +107,7 @@ class MPlayer
   end
 
   def stop
-    unless @io.closed?
+    if @io and not @io.closed?
       run 'stop'
       @io.close
     end

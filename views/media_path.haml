@@ -47,6 +47,10 @@
 
 #playlist
   %strong Playlist
+
+  %form.button{:method => 'post', :action => '/clear'}
+    %input{:type => 'submit', :value => 'clear'}
+
   %ul
     - $mp.playlist.each do |file|
       %li= File.basename(file)

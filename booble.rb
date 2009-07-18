@@ -91,6 +91,12 @@ post '/playtime' do
   redirect request.referer
 end
 
+post '/clear' do
+  $mp.stop
+  $mp.playlist.clear
+  redirect request.referer
+end
+
 if __FILE__ == $0
   ENV['DISPLAY'] = ':0'
 

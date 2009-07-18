@@ -32,9 +32,9 @@
       %li= File.basename(file)
 
 #status
-  #playing
+  %div
     Playing:
-    = $mp.playing()
+    %span#playing= $mp.playing()
 
   %form.button{:method => 'post', :action => '/pause'}
     %input#pause{:type => 'submit', :value => 'play/pause'}

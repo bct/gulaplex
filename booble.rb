@@ -103,6 +103,16 @@ post '/clear' do
   redirect request.referer
 end
 
+get '/status' do
+  content_type :json
+
+  {
+    'percentPos'  => $mp.percent_pos.to_s,
+    'playing'     => $mp.playing,
+    'playlist'    => $mp.playlist.map { |f| File.basename(f) }
+  }.to_json
+end
+
 if __FILE__ == $0
   ENV['DISPLAY'] = ':0'
 

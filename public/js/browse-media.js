@@ -2,12 +2,22 @@ function seekPercent(percent) {
   $.post("/playtime", { pos: percent + "%"});
 }
 
-function updatePercent() {
-  $.get('/playtime', {}, function(data, textStatus) {
-    $("#slider").slider('option', 'value', data);
+function updateStatus() {
+  $.getJSON('/status', function(data) {
+    $("#slider").slider('option', 'value', data.percentPos);
+    $("#playing").text(data.playing);
+
+    $("#playlist ul").remove();
+    var playlist = $("<ul/>");
+    $("#playlist").append(playlist);
+    $.each(data.playlist, function(i, file) {
+      var li = $("<li/>");
+      li.append(file);
+      playlist.append(li);
+    });
   });
 
-  setTimeout(updatePercent, updatePeriod);
+  setTimeout(updateStatus, updatePeriod);
 }
 
 function toggleExpandDir() {
@@ -87,7 +97,7 @@ $(document).ready(function(){
   });
 ;
 
-  setTimeout(updatePercent, updatePeriod);
+  setTimeout(updateStatus, updatePeriod);
 
   addSubtree($("#tree"), rootTree);
 });

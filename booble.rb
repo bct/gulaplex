@@ -72,11 +72,6 @@ post '/forward' do
   redirect request.referer
 end
 
-post '/backward' do
-  $mp.prev
-  redirect request.referer
-end
-
 post '/pause' do
   $mp.toggle_pause
   redirect request.referer, 303

@@ -119,18 +119,15 @@ class MPlayer
     @status = nil
   end
 
-  def nav diff
+  def next
     curr_idx = @playlist.index(@playing)
     return unless curr_idx
 
-    next_file = @playlist[curr_idx + diff]
-    return unless next_file
+    @playlist = @playlist[(curr_idx+1)..-1]
+    return if @playlist.empty?
 
-    play_file next_file
+    play_file @playlist.first
   end
-
-  def next; nav +1; end
-  def prev; nav -1; end
 
   def toggle_pause
     run 'pause'

@@ -66,6 +66,27 @@ $(document).ready(function(){
     stop: function(event, ui) { seekPercent(ui.value); }
   });
 
+  $("#clear").click(function() {
+    $.post('/clear');
+    return false;
+  });
+
+  $("#pause").click(function() {
+    $.post('/pause');
+    return false;
+  });
+
+  $("#stop").click(function() {
+    $.post('/stop');
+    return false;
+  });
+
+  $("#next").click(function() {
+    $.post('/forward');
+    return false;
+  });
+;
+
   setTimeout(updatePercent, updatePeriod);
 
   addSubtree($("#tree"), rootTree);

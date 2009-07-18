@@ -25,7 +25,7 @@
   %strong Playlist
 
   %form.button{:method => 'post', :action => '/clear'}
-    %input{:type => 'submit', :value => 'clear'}
+    %input#clear{:type => 'submit', :value => 'clear'}
 
   %ul
     - $mp.playlist.each do |file|
@@ -35,11 +35,14 @@
   #playing
     Playing:
     = $mp.playing()
+
   %form.button{:method => 'post', :action => '/pause'}
-    %input{:type => 'submit', :value => 'play/pause'}
+    %input#pause{:type => 'submit', :value => 'play/pause'}
+
   %form.button{:method => 'post', :action => '/stop'}
-    %input{:type => 'submit', :value => 'stop'}
+    %input#stop{:type => 'submit', :value => 'stop'}
+
   %form.button{:method => 'post', :action => '/forward'}
-    %input{:type => 'submit', :value => '>>'}
+    %input#next{:type => 'submit', :value => '>>'}
 
 #tree

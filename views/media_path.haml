@@ -6,7 +6,7 @@
 
 :javascript
   var sliderPos = #{@slider_pos};
-  var updatePeriod = 10 * 1000;
+  var updatePeriod = 2 * 1000;
 
   function seekPercent(percent) {
     $.post("/playtime", { pos: percent + "%"});

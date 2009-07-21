@@ -15,9 +15,8 @@ class Status
     @thread = Thread.new do
       puts "starting"
       @io.each_line { |line| self.got_line(line) }
-      unless mp.next # i suspect this will break horribly occasionally
-        mp.stop
-      end
+
+      mp.stop unless mp.next # i suspect this will break horribly occasionally
     end
   end
 
@@ -74,7 +73,7 @@ class MPlayer
   def play_file path
     cmd = 'mplayer -fs -noconsolecontrols -slave -quiet'
 
-    path_esc = " '" + path.gsub(/'/, "\\\'") + "'"
+    path_esc = %Q{ "#{path.gsub(/"/, '\"')}"}
 
     if File.directory?(path) and File.directory?(path + '/VIDEO_TS')
       cmd += ' -dvd-device'

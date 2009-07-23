@@ -9,8 +9,8 @@ require 'mplayer'
 
 require 'json'
 
-MEDIA_ROOT = '/media'
-SNES_ROOT = '/media/software/roms/snes'
+MEDIA_ROOT  = '/media'
+SNES_ROOT   = '/media/software/roms/snes'
 
 def show_media_path path
   @root_tree = json_media_path(path)
@@ -58,49 +58,44 @@ get /snes\/(.*)/ do |path|
 end
 
 post '/playfile' do
-  $mp.pl_append(MEDIA_ROOT + params[:path])
-  redirect request.referer, 303
+  $mp.playlist_append(MEDIA_ROOT + params[:path])
+  ''
 end
 
 post '/playdir' do
-  $mp.pl_append_dir params[:path]
-  redirect request.referer
+  $mp.playlist_append_dir params[:path]
+  ''
 end
 
 post '/forward' do
-  $mp.next
-  redirect request.referer
+  $mp.play_next
+  ''
 end
 
 post '/pause' do
   $mp.toggle_pause
-  redirect request.referer, 303
+  ''
 end
 
 post '/stop' do
   $mp.stop
-  redirect request.referer
+  ''
 end
 
 post '/snes/playing' do
   $mp.stop
   system('snes9x', '-joydev1', '/dev/input/js0', MEDIA_ROOT + params[:path])
-  redirect request.referer
-end
-
-get '/playtime' do
-  $mp.percent_pos.to_s
+  ''
 end
 
 post '/playtime' do
   $mp.seek params[:pos]
-  redirect request.referer
+  ''
 end
 
 post '/clear' do
-  $mp.stop
-  $mp.playlist.clear
-  redirect request.referer
+  $mp.clear_playlist
+  ''
 end
 
 get '/status' do
@@ -116,5 +111,5 @@ end
 if __FILE__ == $0
   ENV['DISPLAY'] = ':0'
 
-  $mp ||= MPlayer.new
+  $mp ||= MPlayer::Control.new
 end

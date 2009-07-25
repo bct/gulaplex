@@ -14,7 +14,7 @@ module MPlayer
       end
     end
 
-    def play_next
+    def play_next stop_first = true
       pl = @status.playlist
 
       if pl.empty?
@@ -23,12 +23,20 @@ module MPlayer
         return
       end
 
-      play_file pl.shift
+      play_file pl.shift, stop_first
       @status.playlist = pl
     end
 
-    def play_file path
-      # XXX close original IO if it exists
+    def stop
+      @status.playing = nil
+      run 'stop'
+      @io.close
+      @io = nil
+    end
+
+    def play_file path, stop_first = false
+      self.stop if @status.playing and stop_first
+
       cmd = 'mplayer -fs -noconsolecontrols -slave -quiet'
       path_esc = %Q{ "#{path.gsub(/"/, '\"')}"}
 
@@ -48,7 +56,7 @@ module MPlayer
           self.got_line(line)
         end
 
-        play_next
+        play_next(false) if @status.playing
       end
     end
 

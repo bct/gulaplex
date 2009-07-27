@@ -95,6 +95,21 @@ $(document).ready(function(){
     $.post('/forward');
     return false;
   });
+
+  $("#sub-select").click(function() {
+    $.post('/sub-select');
+    return false;
+  });
+
+  $("#playlist-youtube").click(function() {
+    var urlInput = $(this).prev("input[name='url']");
+    var htmlUrl = urlInput.val();
+
+    urlInput.val('');
+
+    $.post('/playlist-youtube', { url: htmlUrl })
+    return false;
+  });
 ;
 
   setTimeout(updateStatus, updatePeriod);

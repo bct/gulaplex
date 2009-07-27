@@ -37,7 +37,7 @@ module MPlayer
     def play_file path, stop_first = false
       self.stop if @status.playing and stop_first
 
-      cmd = 'mplayer -fs -noconsolecontrols -slave -quiet'
+      cmd = 'mplayer -fs -noconsolecontrols -slave -quiet -prefer-ipv4'
       path_esc = %Q{ "#{path.gsub(/"/, '\"')}"}
 
       if File.directory?(path) and File.directory?(path + '/VIDEO_TS')
@@ -80,6 +80,20 @@ module MPlayer
       end
     end
 
+    def playlist_append_youtube html_url
+      p html_url
+
+      cclive_csv = `cclive --emit-csv "#{html_url}" | tail -n1`
+
+      p cclive_csv
+
+      flv_url = cclive_csv.split(/","/).last
+
+      p flv_url
+
+      playlist_append(flv_url)
+    end
+
     def run cmd
       @status.unpaused unless cmd == 'pause'
       @io.puts cmd
@@ -90,8 +104,24 @@ module MPlayer
       @status.percent_pos
     end
 
+    def subtitle_select
+      run 'sub_select'
+    end
+
     def clear_playlist
       @status.playlist = []
+    end
+
+    def seek pos
+      if ["+", "-"].member? pos[0].chr
+        pos = pos[1..-1]
+        run "seek #{pos} 0"
+      elsif pos[-1].chr == '%'
+        pos = pos[0..-2]
+        run "seek #{pos} 1"
+      else
+        run "seek #{pos} 2"
+      end
     end
 
     def toggle_pause

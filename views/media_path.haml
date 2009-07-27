@@ -11,6 +11,8 @@
 
 %script{:type => 'text/javascript', :src => '/js/browse-media.js'}
 
+%title booble - browsing media
+
 #header
   %ul
     %li
@@ -44,5 +46,13 @@
 
   %form.button{:method => 'post', :action => '/forward'}
     %input#next{:type => 'submit', :value => '>>'}
+
+  %form.button{:method => 'post', :action => '/sub-select'}
+    %input#sub-select{:type => 'submit', :value => 'next sub'}
+
+  %form{:method => 'post', :action => '/playlist-youtube'}
+    youtube, etc:
+    %input{:name => 'url'}
+    %input#playlist-youtube{:type => 'submit', :value => "queue"}
 
 #tree

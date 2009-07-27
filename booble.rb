@@ -67,6 +67,11 @@ post '/playdir' do
   ''
 end
 
+post '/playlist-youtube' do
+  $mp.playlist_append_youtube params[:url]
+  ''
+end
+
 post '/forward' do
   $mp.play_next
   ''
@@ -95,6 +100,11 @@ end
 
 post '/clear' do
   $mp.clear_playlist
+  ''
+end
+
+post '/sub-select' do
+  $mp.subtitle_select
   ''
 end
 

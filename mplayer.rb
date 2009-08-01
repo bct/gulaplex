@@ -72,10 +72,10 @@ module MPlayer
 
     def playlist_append_dir path
       if File.directory?(path + '/VIDEO_TS')
-        pl_append(path)
+        playlist_append(path)
       else
         Dir[path + '/*'].sort.each do |fn|
-          pl_append(fn) if File.file? fn
+          playlist_append(fn) if File.file? fn
         end
       end
     end

@@ -12,7 +12,7 @@ function updateStatus() {
     $("#playlist").append(playlist);
     $.each(data.playlist, function(i, file) {
       var li = $("<li/>");
-      li.append(file);
+      li.text(file);
       playlist.append(li);
     });
   });
@@ -51,7 +51,7 @@ function addSubtree(parentEl, subtree) {
     var sub = $("<li class='directory'/>");
     var name = $("<span/>");
 
-    name.append(path);
+    name.text(path);
     sub.append(name);
     dirUl.append(sub);
 
@@ -62,7 +62,7 @@ function addSubtree(parentEl, subtree) {
     var sub = $("<li class='file'/>");
     var name = $("<span/>");
 
-    name.append(path);
+    name.text(path);
     sub.append(name);
     fileUl.append(sub);
 

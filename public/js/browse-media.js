@@ -20,24 +20,27 @@ function updateStatus() {
   setTimeout(updateStatus, updatePeriod);
 }
 
-function toggleExpandDir() {
-  var parent = $(this).parent();
-  var subtree = parent.children("ul");
+function toggleExpandDir(fullPath) {
+  return function() {
+    var parent = $(this).parent();
+    var subtree = parent.children("ul");
 
-  if(subtree.length != 0) {
-    subtree.remove();
-  } else {
-    var url = "/media/" + $(this).text();
+    if(subtree.length != 0) {
+      subtree.remove();
+    } else {
+      var url = "/media/" + fullPath;
 
-    $.getJSON(url, function(data){
-      addSubtree(parent, data);
-    });
-  }
+      $.getJSON(url, function(data){
+        addSubtree(parent, data);
+      });
+    }
+  };
 }
 
-function playFile() {
-  var path = $(this).text();
-  $.post("/playfile", { path: path });
+function playFile(fullPath) {
+  return function() {
+    $.post("/playfile", { path: fullPath });
+  };
 }
 
 function addSubtree(parentEl, subtree) {
@@ -47,26 +50,26 @@ function addSubtree(parentEl, subtree) {
   var fileUl = $("<ul/>");
   parentEl.append(fileUl);
 
-  $.each(subtree.directories, function(i, path) {
+  $.each(subtree.directories, function(i, full_path) {
     var sub = $("<li class='directory'/>");
     var name = $("<span/>");
 
-    name.text(path);
+    name.text(full_path.split("/").pop());
     sub.append(name);
     dirUl.append(sub);
 
-    name.click(toggleExpandDir);
+    name.click(toggleExpandDir(full_path));
   });
 
-  $.each(subtree.files, function(i, path) {
+  $.each(subtree.files, function(i, full_path) {
     var sub = $("<li class='file'/>");
     var name = $("<span/>");
 
-    name.text(path);
+    name.text(full_path.split("/").pop());
     sub.append(name);
     fileUl.append(sub);
 
-    name.click(playFile);
+    name.click(playFile(full_path));
   });
 }
 

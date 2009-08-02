@@ -73,7 +73,7 @@ function addSubtree(parentEl, subtree) {
 $(document).ready(function(){
   $("#slider").slider({
     value: sliderPos,
-    stop: function(event, ui) { seekPercent(ui.value); }
+    slide: function(event, ui) { seekPercent(ui.value); }
   });
 
   $("#clear").click(function() {

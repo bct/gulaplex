@@ -1,5 +1,6 @@
 require 'thread'
 require 'monitor'
+require 'timeout'
 
 module MPlayer
   class Control
@@ -34,9 +35,10 @@ module MPlayer
       @io = nil
     end
 
-    def play_file path, stop_first = false
+    def play_file file_data, stop_first = false
       self.stop if @status.playing and stop_first
 
+      path = file_data[0]
       cmd = 'mplayer -fs -noconsolecontrols -slave -quiet -prefer-ipv4'
       path_esc = %Q{ "#{path.gsub(/"/, '\"')}"}
 
@@ -49,7 +51,6 @@ module MPlayer
       end
 
       @io = IO.popen cmd, "r+"
-      @status.playing = path
 
       @thread = Thread.new do
         @io.each_line do |line|
@@ -58,24 +59,26 @@ module MPlayer
 
         play_next(false) if @status.playing
       end
+
+      @status.playing = file_data
     end
 
-    def playlist_append path
+    def playlist_append path, title
       if @status.playing.nil?
-        play_file path
+        play_file [path, title]
       else
         pl = @status.playlist
-        pl << path
+        pl << [path, title]
         @status.playlist = pl
       end
     end
 
     def playlist_append_dir path
       if File.directory?(path + '/VIDEO_TS')
-        playlist_append(path)
+        playlist_append(path, File.basename(path))
       else
         Dir[path + '/*'].sort.each do |fn|
-          playlist_append(fn) if File.file? fn
+          playlist_append(fn, File.basename(path)) if File.file? fn
         end
       end
     end
@@ -83,15 +86,15 @@ module MPlayer
     def playlist_append_youtube html_url
       p html_url
 
-      cclive_csv = `cclive --emit-csv "#{html_url}" | tail -n1`
+      clive_csv = `clive --emit-csv "#{html_url}" | tail -n1`
 
-      p cclive_csv
+      p clive_csv
 
-      flv_url = cclive_csv.split(/","/).last
+      orig_url, flv_url, title_fname, size = clive_csv.split(/","/)
 
       p flv_url
 
-      playlist_append(flv_url)
+      playlist_append(flv_url, title_fname)
     end
 
     def run cmd
@@ -131,6 +134,11 @@ module MPlayer
 
     def playlist; @status.playlist; end
     def playing; @status.playing; end
+
+    def playing_title
+      p = self.playing
+      p[1] if p
+    end
   end
 
   class Status
@@ -159,12 +167,15 @@ module MPlayer
     end
 
     def percent_pos
-      synchronize do
-        unless @status[:paused]
-          @control.run 'get_percent_pos'
-          @status_update.wait
+      # FIXME: i don't like this timeout. also it raises an exception.
+      Timeout::timeout(1) do
+        synchronize do
+          unless @status[:paused]
+            @control.run 'get_percent_pos'
+            @status_update.wait
+          end
+          @status[:percent_pos]
         end
-        @status[:percent_pos]
       end
     end
 

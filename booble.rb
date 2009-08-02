@@ -58,7 +58,7 @@ get /snes\/(.*)/ do |path|
 end
 
 post '/playfile' do
-  $mp.playlist_append(MEDIA_ROOT + params[:path])
+  $mp.playlist_append(MEDIA_ROOT + params[:path], File.basename(params[:path]))
   ''
 end
 
@@ -113,8 +113,8 @@ get '/status' do
 
   {
     'percentPos'  => $mp.percent_pos.to_s,
-    'playing'     => $mp.playing,
-    'playlist'    => $mp.playlist.map { |f| File.basename(f) }
+    'playing'     => $mp.playing_title.to_s,
+    'playlist'    => $mp.playlist.map { |f,t| t }
   }.to_json
 end
 

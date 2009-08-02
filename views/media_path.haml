@@ -30,13 +30,13 @@
     %input#clear{:type => 'submit', :value => 'clear'}
 
   %ul
-    - $mp.playlist.each do |file|
-      %li= File.basename(file)
+    - $mp.playlist.each do |file,title|
+      %li= title
 
 #status
   %div
     Playing:
-    %span#playing= $mp.playing()
+    %span#playing= $mp.playing_title
 
   %form.button{:method => 'post', :action => '/pause'}
     %input#pause{:type => 'submit', :value => 'play/pause'}

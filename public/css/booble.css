@@ -51,6 +51,6 @@ a, #tree span {
   text-decoration: none;
 }
 
-.file > span:hover {
-  text-decoration: underline;
+#tree .directory > span {
+  color: #888;
 }

@@ -18,11 +18,7 @@ module MPlayer
     def play_next stop_first = true
       pl = @status.playlist
 
-      if pl.empty?
-        @status.playing = nil
-        @io = nil
-        return
-      end
+      return if pl.empty? # nothing's next, ignore the command
 
       play_file pl.shift, stop_first
       @status.playlist = pl

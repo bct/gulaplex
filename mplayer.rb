@@ -2,6 +2,9 @@ require 'thread'
 require 'monitor'
 require 'timeout'
 
+# the given url could not be handled by clive
+class NotCliveable < Exception; end
+
 module MPlayer
   class Control
     def initialize
@@ -12,13 +15,23 @@ module MPlayer
       puts line.inspect
       if line.match /^ANS_PERCENT_POSITION=(.*)/
         @status.percent_pos = $1.to_i
+      elsif line.match /^ANS_META_TITLE='(.*)'/
+        @status.title = $1.strip
+      elsif line.match /^ANS_META_ARTIST='(.*)'/
+        @status.artist = $1.strip
       end
     end
 
     def play_next stop_first = true
       pl = @status.playlist
 
-      return if pl.empty? # nothing's next, ignore the command
+      if pl.empty?
+        if @io and @io.closed?
+          @status.playing = nil
+          @io = nil
+        end
+        return # nothing's next, ignore the command
+      end
 
       play_file pl.shift, stop_first
       @status.playlist = pl
@@ -53,6 +66,7 @@ module MPlayer
           self.got_line(line)
         end
 
+        @io.close
         play_next(false) if @status.playing
       end
 
@@ -82,11 +96,12 @@ module MPlayer
     def playlist_append_youtube html_url
       p html_url
 
-      clive_csv = `clive --emit-csv "#{html_url}" | tail -n1`
+      clive_csv = `cclive --emit-csv "#{html_url}" | tail -n1`
 
       p clive_csv
+      raise NotCliveable if clive_csv.match /^FAILED: /
 
-      orig_url, flv_url, title_fname, size = clive_csv.split(/","/)
+      orig_url, title_fname, flv_url,  size = clive_csv.split(/","/)
 
       p flv_url
 
@@ -103,8 +118,12 @@ module MPlayer
       @status.percent_pos
     end
 
-    def subtitle_select
+    def subtitle_cycle
       run 'sub_select'
+    end
+
+    def audio_cycle
+      run 'switch_audio -1'
     end
 
     def clear_playlist
@@ -132,6 +151,10 @@ module MPlayer
     def playing; @status.playing; end
 
     def playing_title
+      if @io and (title = @status.title) and (artist = @status.artist)
+        return artist + ' - ' + title
+      end
+
       p = self.playing
       p[1] if p
     end
@@ -143,16 +166,22 @@ module MPlayer
     def initialize control
       @control = control
 
-      @status = { :percent_pos => 0,
-                  :playlist => [],
-                  :playing => nil,
-                  :paused => false }
-
+      @status = { :playlist => [] }
       @status[:playlist].freeze
+
+      self.reset_metadata!
 
       @status_update = self.new_cond
 
       super()
+    end
+
+    def reset_metadata!
+      @status[:percent_pos] = 0
+      @status[:artist]      = nil
+      @status[:title]       = nil
+      @status[:playing]     = nil
+      @status[:paused]      = false
     end
 
     def percent_pos= pp
@@ -175,23 +204,67 @@ module MPlayer
       end
     end
 
-    def playing
+    def title= t
       synchronize do
-        @status[:playing]
+        t = nil if t.empty?
+        @status[:title] = t
+        @status_update.signal
       end
+    end
+
+    def title
+      return @status[:title] if @status[:title]
+
+      # FIXME: i don't like this timeout. also it raises an exception.
+      Timeout::timeout(1) do
+        synchronize do
+          unless @status[:paused] # this could cause weirdness.
+            @control.run 'get_meta_title'
+            @status_update.wait
+          end
+          @status[:title]
+        end
+      end
+    end
+
+    def artist= ar
+      synchronize do
+        @status[:artist] = ar
+        @status_update.signal
+      end
+    end
+
+    def artist
+      return @status[:artist] if @status[:artist]
+
+      # FIXME: i don't like this timeout. also it raises an exception.
+      Timeout::timeout(1) do
+        synchronize do
+          unless @status[:paused] # this could cause weirdness.
+            @control.run 'get_meta_artist'
+            @status_update.wait
+          end
+          @status[:artist]
+        end
+      end
+    end
+
+    def playing
+      synchronize { @status[:playing] }
     end
 
     def playing= p
       synchronize do
+        # wipe the data for any item that might have been playing
+        self.reset_metadata!
+
         @status[:playing] = p
         @status_update.signal
       end
     end
 
     def playlist
-      synchronize do
-        @status[:playlist].dup
-      end
+      synchronize { @status[:playlist].dup }
     end
 
     def playlist= pl
@@ -202,15 +275,11 @@ module MPlayer
     end
 
     def unpaused
-      synchronize do
-        @status[:paused] = false
-      end
+      synchronize { @status[:paused] = false }
     end
 
     def toggle_paused
-      synchronize do
-        @status[:paused] = !@status[:paused]
-      end
+      synchronize { @status[:paused] = !@status[:paused] }
     end
   end
 end

@@ -11,6 +11,7 @@ require 'json'
 
 MEDIA_ROOT  = '/media'
 SNES_ROOT   = '/media/software/roms/snes'
+COMMIT_ID   = `git log -n1 --oneline | cut -f1 -d\\ `
 
 def show_media_path path
   @root_tree = json_media_path(path)
@@ -20,11 +21,20 @@ def show_media_path path
 end
 
 def json_media_path path
-  ds, fs = Dir[MEDIA_ROOT + path + '/*'].partition { |x| File.directory? x }
+  dir = MEDIA_ROOT + path
 
-  ds.map! { |fn| fn.sub MEDIA_ROOT, '' }
-  fs.map! { |fn| fn.sub MEDIA_ROOT, '' }
+  entries = Dir.entries(dir)
+  entries.delete '.'
+  entries.delete '..'
 
+  entries = entries.map { |x| File.join path, x }
+
+  ds, fs = entries.partition do |x|
+    full_path = File.join(MEDIA_ROOT, x)
+
+    # treat it as a directory if it is a directory and it's not a dvd directory
+    File.directory?(full_path) and not File.directory?(File.join(full_path, 'VIDEO_TS'))
+  end
   { 'directories' => ds.sort, 'files' => fs.sort }.to_json
 end
 
@@ -67,9 +77,20 @@ post '/playdir' do
   ''
 end
 
-post '/playlist-youtube' do
-  $mp.playlist_append_youtube params[:url]
+post '/playlist' do
+  p params
+  p request.body.read
   ''
+end
+
+post '/playlist-youtube' do
+  begin
+    $mp.playlist_append_youtube params[:url]
+    ''
+  rescue NotCliveable
+    $mp.playlist_append(params[:url], File.basename(params[:url]))
+    ''
+  end
 end
 
 post '/forward' do
@@ -104,7 +125,12 @@ post '/clear' do
 end
 
 post '/sub-select' do
-  $mp.subtitle_select
+  $mp.subtitle_cycle
+  ''
+end
+
+post '/audio-select' do
+  $mp.audio_cycle
   ''
 end
 

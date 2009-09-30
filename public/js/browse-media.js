@@ -2,22 +2,58 @@ function seekPercent(percent) {
   $.post("/playtime", { pos: percent + "%"});
 }
 
+function setupPlaylistDragging() {
+  // Initialise the table
+  $("#playlist-entries").tableDnD({
+    onDragStyle: { background: "red" },
+    onDragStart: function(table, row) {
+      stopPlaylistUpdates = true;
+    },
+    onDrop: function(table, row) {
+      // send the new playlist
+      var entries = [];
+
+      $("#playlist-entries").children("tr").each(function(tr) {
+        alert(tr);
+      });
+
+      $.post("/playlist", jQuery.param({ "entries[]": [1,2] }), function(data, textStatus) {
+        stopPlaylistUpdates = false;
+      }, "json");
+    }
+  });
+}
+
 function updateStatus() {
   $.getJSON('/status', function(data) {
     $("#slider").slider('option', 'value', data.percentPos);
     $("#playing").text(data.playing);
 
-    $("#playlist ul").remove();
-    var playlist = $("<ul/>");
-    $("#playlist").append(playlist);
-    $.each(data.playlist, function(i, file) {
-      var li = $("<li/>");
-      li.text(file);
-      playlist.append(li);
-    });
-  });
+    /* update the playlist */
+    if( !window.stopPlaylistUpdates )
+    {
+      currentPlaylist = [];
 
-  setTimeout(updateStatus, updatePeriod);
+      var playlist = $("#playlist-entries");
+      playlist.empty();
+
+      $.each(data.playlist, function(i, file) {
+        var tr = $("<tr/>");
+
+        var td0 = $("<td/>");
+        td0.text(file);
+        tr.append(td0);
+
+        playlist.append(tr);
+
+        currentPlaylist.push(file);
+      });
+
+      setupPlaylistDragging();
+    }
+
+    setTimeout(updateStatus, updatePeriod);
+  });
 }
 
 function toggleExpandDir(fullPath) {
@@ -28,7 +64,7 @@ function toggleExpandDir(fullPath) {
     if(subtree.length != 0) {
       subtree.remove();
     } else {
-      var url = "/media/" + fullPath;
+      var url = escape("/media/" + fullPath);
 
       $.getJSON(url, function(data){
         addSubtree(parent, data);
@@ -73,36 +109,25 @@ function addSubtree(parentEl, subtree) {
   });
 }
 
+function asyncButton(buttonSelector, postUrl) {
+  $(buttonSelector).click(function() {
+    $.post(postUrl);
+    return false;
+  });
+}
+
 $(document).ready(function(){
   $("#slider").slider({
     value: sliderPos,
     slide: function(event, ui) { seekPercent(ui.value); }
   });
 
-  $("#clear").click(function() {
-    $.post('/clear');
-    return false;
-  });
-
-  $("#pause").click(function() {
-    $.post('/pause');
-    return false;
-  });
-
-  $("#stop").click(function() {
-    $.post('/stop');
-    return false;
-  });
-
-  $("#next").click(function() {
-    $.post('/forward');
-    return false;
-  });
-
-  $("#sub-select").click(function() {
-    $.post('/sub-select');
-    return false;
-  });
+  asyncButton('#clear', '/clear');
+  asyncButton('#pause', '/pause');
+  asyncButton('#stop',  '/stop');
+  asyncButton('#next',  '/forward');
+  asyncButton('#sub-select',    '/sub-select');
+  asyncButton('#audio-select',  '/audio-select');
 
   $("#playlist-youtube").click(function() {
     var urlInput = $(this).prev("input[name='url']");
@@ -113,9 +138,10 @@ $(document).ready(function(){
     $.post('/playlist-youtube', { url: htmlUrl })
     return false;
   });
-;
 
   setTimeout(updateStatus, updatePeriod);
 
   addSubtree($("#tree"), rootTree);
+
+  setupPlaylistDragging();
 });

@@ -7,7 +7,7 @@ html {
 body {
   margin: 0 auto;
   padding: 5em 2em;
-  width: 60%;
+  max-width: 60em;
   background: #554444;
   border-left:  5px solid #222211;
   border-right: 5px solid #222211;
@@ -37,6 +37,16 @@ input[type=submit] {
 #playlist {
   float: right;
   width: 30%;
+}
+
+#playlist td {
+  font-size: 0.8em;
+  border: 1px solid #888;
+  background: #887766;
+}
+
+#playing {
+  font-weight: bold;
 }
 
 #slider {

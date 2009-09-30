@@ -54,13 +54,16 @@ input[type=submit] {
   margin: 1em;
 }
 
-a, #tree span {
-  cursor: pointer;
+.cmd, a {
   color: #99bbaa;
-  font-weight: bold;
   text-decoration: none;
 }
 
-#tree .directory > span {
+#tree .directory {
   color: #888;
+  cursor: pointer;
+}
+
+.cmd:hover, a:hover, .dirName:hover {
+  text-decoration: underline;
 }

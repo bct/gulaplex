@@ -88,7 +88,7 @@ module MPlayer
         playlist_append(path, File.basename(path))
       else
         Dir[path + '/*'].sort.each do |fn|
-          playlist_append(fn, File.basename(path)) if File.file? fn
+          playlist_append(fn, File.basename(fn)) if File.file? fn
         end
       end
     end

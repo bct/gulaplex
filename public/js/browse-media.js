@@ -73,6 +73,12 @@ function toggleExpandDir(fullPath) {
   };
 }
 
+function playDirectory(fullPath) {
+  return function() {
+    $.post("/playdir", { path: "/media/" + fullPath });
+  };
+}
+
 function playFile(fullPath) {
   return function() {
     $.post("/playfile", { path: fullPath });
@@ -86,19 +92,27 @@ function addSubtree(parentEl, subtree) {
   var fileUl = $("<ul/>");
   parentEl.append(fileUl);
 
+  // add subdirectories to the displayed tree
   $.each(subtree.directories, function(i, full_path) {
     var sub = $("<li class='directory'/>");
-    var name = $("<span/>");
 
+    var name = $("<span class='dirName'/>");
     name.text(full_path.split("/").pop());
-    sub.append(name);
-    dirUl.append(sub);
-
     name.click(toggleExpandDir(full_path));
+    sub.append(name);
+
+    sub.append(" ");
+
+    var playDir = $("<span class='cmd'>all</span>");
+    playDir.click(playDirectory(full_path));
+    sub.append(playDir);
+
+    dirUl.append(sub);
   });
 
+  // add files to the displayed tree
   $.each(subtree.files, function(i, full_path) {
-    var sub = $("<li class='file'/>");
+    var sub = $("<li class='file cmd'/>");
     var name = $("<span/>");
 
     name.text(full_path.split("/").pop());

@@ -59,8 +59,15 @@ input[type=submit] {
   text-decoration: none;
 }
 
+#tree {
+  width: 69%;
+}
+
 #tree .directory {
   color: #888;
+}
+
+#tree .directory .dirName, .cmd {
   cursor: pointer;
 }
 

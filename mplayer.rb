@@ -98,11 +98,12 @@ module MPlayer
       clive_csv = `cclive --emit-csv "#{html_url}" | tail -n1`
 
       p clive_csv
-      raise NotCliveable if clive_csv.match /^FAILED: /
+      raise NotCliveable if clive_csv.match /^(FAILED: |error: )/
 
-      orig_url, title_fname, flv_url,  size = clive_csv.split(/","/)
+      orig_url, title_fname, flv_url, size = clive_csv.split(/","/)
 
       p flv_url
+      raise NotCliveable if flv_url.nil?
 
       playlist_append(flv_url, title_fname)
     end

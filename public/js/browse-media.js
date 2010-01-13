@@ -96,16 +96,16 @@ function addSubtree(parentEl, subtree) {
   $.each(subtree.directories, function(i, full_path) {
     var sub = $("<li class='directory'/>");
 
+    var playDir = $("<span class='cmd playAll'>all</span>");
+    playDir.click(playDirectory(full_path));
+    sub.append(playDir);
+
+    sub.append(" ");
+
     var name = $("<span class='dirName'/>");
     name.text(full_path.split("/").pop());
     name.click(toggleExpandDir(full_path));
     sub.append(name);
-
-    sub.append(" ");
-
-    var playDir = $("<span class='cmd'>all</span>");
-    playDir.click(playDirectory(full_path));
-    sub.append(playDir);
 
     dirUl.append(sub);
   });

@@ -67,3 +67,8 @@ input[type=submit] {
 .cmd:hover, a:hover, .dirName:hover {
   text-decoration: underline;
 }
+
+.playAll {
+  margin-left: 1em;
+  float: right;
+}

@@ -12,7 +12,6 @@ module MPlayer
     end
 
     def got_line line
-      puts line.inspect
       if line.match /^ANS_PERCENT_POSITION=(.*)/
         @status.percent_pos = $1.to_i
       elsif line.match /^ANS_META_TITLE='(.*)'/
@@ -48,7 +47,7 @@ module MPlayer
       self.stop if @status.playing and stop_first
 
       path = file_data[0]
-      cmd = 'mplayer -fs -noconsolecontrols -slave -quiet -prefer-ipv4'
+      cmd = 'mplayer -fs -noconsolecontrols -slave -quiet -prefer-ipv4 -af volnorm'
       path_esc = %Q{ "#{path.gsub(/"/, '\"')}"}
 
       if File.directory?(path) and File.directory?(path + '/VIDEO_TS')

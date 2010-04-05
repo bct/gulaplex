@@ -54,6 +54,8 @@ get '/' do
 end
 
 get /media\/(.*)/ do |path|
+  headers 'Cache-Control' => 'no-cache'
+
   if request.xhr?
     content_type :json
 
@@ -135,6 +137,8 @@ post '/audio-select' do
 end
 
 get '/status' do
+  headers 'Cache-Control' => 'no-cache'
+
   content_type :json
 
   {

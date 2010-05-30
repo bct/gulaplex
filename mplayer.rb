@@ -47,7 +47,9 @@ module MPlayer
       self.stop if @status.playing and stop_first
 
       path = file_data[0]
-      cmd = 'mplayer -fs -noconsolecontrols -slave -quiet -prefer-ipv4 -af volnorm'
+      $db.increment_playcount(path)
+
+      cmd = 'mplayer -fs -noconsolecontrols -slave -quiet -framedrop -prefer-ipv4 -af volnorm -heartbeat-cmd "xset s reset" -lavdopts skiploopfilter=nonkey'
       path_esc = %Q{ "#{path.gsub(/"/, '\"')}"}
 
       if File.directory?(path) and File.directory?(path + '/VIDEO_TS')

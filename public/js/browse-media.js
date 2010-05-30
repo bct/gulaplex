@@ -13,9 +13,11 @@ function setupPlaylistDragging() {
       // send the new playlist
       var entries = [];
 
-      $("#playlist-entries").children("tr").each(function(tr) {
-        alert(tr);
-      });
+      // TODO: figuring out the new order is going to be problematic.
+      // not sure how to signal to sinatra the new order.
+      // maybe i should attach the full path to each table row?
+      alert(row);
+      alert(table.tBodies[0].rows);
 
       $.post("/playlist", jQuery.param({ "entries[]": [1,2] }), function(data, textStatus) {
         stopPlaylistUpdates = false;
@@ -111,12 +113,20 @@ function addSubtree(parentEl, subtree) {
   });
 
   // add files to the displayed tree
-  $.each(subtree.files, function(i, full_path) {
-    var sub = $("<li class='file cmd'/>");
-    var name = $("<span/>");
+  $.each(subtree.files, function(i, list) {
+    var full_path = list[0];
+    var playcount = list[1];
 
+    var sub = $("<li class='file cmd'/>");
+
+    var name = $("<span/>");
     name.text(full_path.split("/").pop());
     sub.append(name);
+
+    var pc = $("<span class='playcount'/>");
+    pc.text(playcount)
+    sub.append(pc);
+
     fileUl.append(sub);
 
     name.click(playFile(full_path));

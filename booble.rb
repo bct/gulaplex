@@ -6,12 +6,14 @@ require 'sinatra'
 require 'haml'
 
 require 'mplayer'
+require 'index_rdf'
+
+require 'config'
 
 require 'json'
 
-MEDIA_ROOT  = '/media'
-SNES_ROOT   = '/media/software/roms/snes'
-COMMIT_ID   = `git log -n1 --oneline | cut -f1 -d\\ `
+require 'watcher'
+require 'media_db'
 
 def show_media_path path
   @root_tree = json_media_path(path)
@@ -35,7 +37,9 @@ def json_media_path path
     # treat it as a directory if it is a directory and it's not a dvd directory
     File.directory?(full_path) and not File.directory?(File.join(full_path, 'VIDEO_TS'))
   end
-  { 'directories' => ds.sort, 'files' => fs.sort }.to_json
+  # augment with playcounts
+  fs = fs.sort.map { |f| [f, $db.playcount(f)] }
+  { 'directories' => ds.sort, 'files' => fs }.to_json
 end
 
 def show_snes_path path
@@ -62,6 +66,21 @@ get /media\/(.*)/ do |path|
     json_media_path(path)
   else
     show_media_path(path)
+  end
+end
+
+get '/search' do
+  headers 'Cache-Control' => 'no-cache'
+
+  if params[:q]
+    # return the search results
+    $db.search(params[:q]).map do |p|
+      # strip off prefix, we only want to see relative to MEDIA_ROOT
+      p.sub(/.*?\/\/#{MEDIA_ROOT}/, '')
+    end.sort.to_json
+  else
+    # return the search page
+    haml :search
   end
 end
 
@@ -152,4 +171,27 @@ if __FILE__ == $0
   ENV['DISPLAY'] = ':0'
 
   $mp ||= MPlayer::Control.new
+  $db ||= MediaDB.new REPO_PATH
+
+  print "loading watcher..."
+  w = Watcher.new
+
+  w.when_directory_deleted { |p| $db.directory_deleted(p) }
+
+  w.when_directory_moved { |old,new| $db.directory_moved(old,new) }
+
+  w.when_file_created { |p| $db.new_file(p) }
+  w.when_file_deleted { |p| $db.kill_file(p) }
+
+  w.watch(MEDIA_ROOT, EXCLUDE)
+  puts "done!"
+
+  Thread.new do
+    begin
+      w.go!
+    rescue => e
+      puts e.inspect
+      puts e.backtrace
+    end
+  end
 end

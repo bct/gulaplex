@@ -34,7 +34,8 @@ input[type=submit] {
   background: #ccc;
 }
 
-#playlist {
+.sidebar {
+  clear: right;
   float: right;
   width: 30%;
 }
@@ -83,10 +84,18 @@ input[type=submit] {
 form.search {
   width: 80%;
   margin: 0 auto;
+}
+
+form.search input {
   font-size: 2em;
 }
 
 .playcount {
   font-size: 0.6em;
   border: 1px solid red;
+  margin-left: 1em;
+}
+
+.unplayed {
+  background: #665555;
 }

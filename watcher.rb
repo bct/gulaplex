@@ -21,6 +21,7 @@ class Watcher
   def _watch(path)
     wd = @i.add_watch(path, Inotify::CREATE | Inotify::DELETE | Inotify::MOVE)
     @wd_to_path[wd] = path
+  rescue Errno::EACCES
   end
 
   # add watches, recursively
@@ -73,7 +74,7 @@ class Watcher
   def directory_created full_path
     begin
       # watch this directory, recursively
-      watch(full_path)
+      watch(full_path, [])
 
       Dir[full_path+'/*'].each do |p|
         @when_file_created.call(p) if File.file? p

@@ -6,7 +6,6 @@ require 'sinatra'
 require 'haml'
 
 require 'mplayer'
-require 'index_rdf'
 
 require 'config'
 
@@ -17,7 +16,6 @@ require 'media_db'
 
 def show_media_path path
   @root_tree = json_media_path(path)
-  @slider_pos = $mp.percent_pos
 
   haml :media_path
 end
@@ -38,7 +36,7 @@ def json_media_path path
     File.directory?(full_path) and not File.directory?(File.join(full_path, 'VIDEO_TS'))
   end
   # augment with playcounts
-  fs = fs.sort.map { |f| [f, $db.playcount(f)] }
+  fs = fs.sort.reject { |f| f.match(IGNORE_EXTENSIONS) }.map { |f| [f, $db.playcount(MEDIA_ROOT + f)] }
   { 'directories' => ds.sort, 'files' => fs }.to_json
 end
 
@@ -65,7 +63,8 @@ get '/search' do
     # return the search results
     $db.search(params[:q]).map do |p|
       # strip off prefix, we only want to see relative to MEDIA_ROOT
-      p.sub(/.*?\/\/#{MEDIA_ROOT}/, '')
+      path = p[:path].sub(MEDIA_ROOT, '')
+      [ path, p[:playcount] ]
     end.sort.to_json
   else
     # return the search page
@@ -155,12 +154,12 @@ if __FILE__ == $0
   print "loading watcher..."
   w = Watcher.new
 
-  w.when_directory_deleted { |p| $db.directory_deleted(p) }
+  w.when_directory_deleted { |p| puts "xxx #{p}"; $db.directory_deleted(p) }
 
-  w.when_directory_moved { |old,new| $db.directory_moved(old,new) }
+  w.when_directory_moved { |old,new| puts "m #{old} #{new}"; $db.directory_moved(old,new) }
 
-  w.when_file_created { |p| $db.new_file(p) }
-  w.when_file_deleted { |p| $db.kill_file(p) }
+  w.when_file_created { |p| puts "cre #{p}"; $db.new_file(p) }
+  w.when_file_deleted { |p| puts "del #{p}"; $db.kill_file(p) }
 
   w.watch(MEDIA_ROOT, EXCLUDE)
   puts "done!"
@@ -171,6 +170,7 @@ if __FILE__ == $0
     rescue => e
       puts e.inspect
       puts e.backtrace
+      exit()
     end
   end
 end

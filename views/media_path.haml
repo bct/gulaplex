@@ -1,69 +1,6 @@
-%link{:rel => 'stylesheet', :type => 'text/css', :href => '/css/booble.css'}
-%link{:rel => 'stylesheet', :type => 'text/css', :href => '/css/theme/jquery-ui-1.7.2.custom.css'}
-
-%script{:type => 'text/javascript', :src => '/js/jquery-1.3.2.min.js'}
-%script{:type => 'text/javascript', :src => '/js/jquery-ui-1.7.2.custom.min.js'}
-
 :javascript
-  var sliderPos = #{@slider_pos};
   var rootTree = #{@root_tree};
-  var updatePeriod = 1 * 1000;
 
 %script{:type => 'text/javascript', :src => '/js/browse-media.js'}
-%script{:type => 'text/javascript', :src => '/js/jquery.tablednd_0_5.js'}
-
-%title booble - browsing media
-
-#header
-  %ul
-    %li
-      %a{:href => '/search'} search
-    %li
-      %a{:href => '/media/'} browse
-  %strong booble
-
-  %br
-
-  ( version
-  =COMMIT_ID
-  )
-
-#slider
-
-#playlist
-  %strong Playlist
-
-  %form.button{:method => 'post', :action => '/clear'}
-    %input#clear{:type => 'submit', :value => 'clear'}
-
-  %table#playlist-entries
-    - $mp.playlist.each do |file,title|
-      %tr
-        %td= title
-
-#status
-  %div
-    Playing:
-    %span#playing= $mp.playing_title
-
-  %form.button{:method => 'post', :action => '/pause'}
-    %input#pause{:type => 'submit', :value => 'play/pause'}
-
-  %form.button{:method => 'post', :action => '/stop'}
-    %input#stop{:type => 'submit', :value => 'stop'}
-
-  %form.button{:method => 'post', :action => '/forward'}
-    %input#next{:type => 'submit', :value => '>>'}
-
-  %form.button{:method => 'post', :action => '/sub-select'}
-    %input#sub-select{:type => 'submit', :value => 'next sub'}
-
-  %form.button{:method => 'post', :action => '/audio-select'}
-    %input#audio-select{:type => 'submit', :value => 'next audio'}
-
-  %form{:method => 'post', :action => '/playlist-youtube'}
-    youtube, etc:
-    %input{:name => 'url'}
-    %input#playlist-youtube{:type => 'submit', :value => "queue"}
 
 #tree

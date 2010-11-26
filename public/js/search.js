@@ -1,9 +1,3 @@
-function playFile(fullPath) {
-  return function() {
-    $.post("/playfile", { path: fullPath });
-  };
-}
-
 $(document).ready(function() {
   $("#search").click(function() {
     var qInput = $(this).prev("input[name='q']");
@@ -13,12 +7,26 @@ $(document).ready(function() {
 
       resultsUl.children().remove();
 
-      $.each(data, function(i, path) {
+      $.each(data, function(i, list) {
+        var      path = list[0];
+        var playcount = list[1];
+
         var li = $("<li class='file cmd'/>");
         li.text(path);
-        li.click(playFile(path));
+
+        if(playcount) {
+          var pc = $("<span class='playcount'/>")
+          pc.text(playcount);
+          li.append(pc);
+        }
+
         resultsUl.append(li);
+
+        li.click(playFile(path));
       });
+
+      if(data.length == 0)
+        resultsUl.append("<li>No results for " + qInput.val() + "!</li>");
     });
 
     return false;

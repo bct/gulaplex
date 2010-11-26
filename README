@@ -1,8 +1,18 @@
 # booble #
 
 what, it's named after the blue-footed booby. pervert.
+(this is what happens when you let your roommate name things)
+
+## howto ##
+
+1. edit config.rb
+2. ./media_db.rb
+3. ./booble.rb -p 5678
+4. http://localhost:5678/
 
 ## requirements ##
 
 - sinatra
 - json
+- sequel
+- inotify

@@ -42,17 +42,6 @@ def json_media_path path
   { 'directories' => ds.sort, 'files' => fs }.to_json
 end
 
-def show_snes_path path
-  @ds, @fs = Dir[MEDIA_ROOT + path + '/*'].partition { |x| File.directory? x }
-
-  @ds.map! { |fn| fn.sub SNES_ROOT, '' }
-  @fs.map! { |fn| fn.sub SNES_ROOT, '' }
-
-  @path = path
-
-  haml :snes_path
-end
-
 get '/' do
   redirect '/media/'
 end
@@ -82,10 +71,6 @@ get '/search' do
     # return the search page
     haml :search
   end
-end
-
-get /snes\/(.*)/ do |path|
-  show_snes_path('/' + path)
 end
 
 post '/playfile' do
@@ -126,12 +111,6 @@ end
 
 post '/stop' do
   $mp.stop
-  ''
-end
-
-post '/snes/playing' do
-  $mp.stop
-  system('snes9x', '-joydev1', '/dev/input/js0', MEDIA_ROOT + params[:path])
   ''
 end
 

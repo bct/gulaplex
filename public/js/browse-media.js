@@ -6,7 +6,7 @@ function toggleExpandDir(fullPath) {
     if(subtree.length != 0) {
       subtree.remove();
     } else {
-      var url = escape("/media/" + fullPath);
+      var url = escape(unescape(encodeURIComponent("/media/" + fullPath)));
 
       $.getJSON(url, function(data){
         addSubtree(parent, data);

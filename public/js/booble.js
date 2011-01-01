@@ -51,7 +51,7 @@ function updateStatus() {
         currentPlaylist.push(file);
       });
 
-      setupPlaylistDragging();
+//      setupPlaylistDragging();
     }
 
     setTimeout(updateStatus, updatePeriod);
@@ -96,5 +96,5 @@ $(document).ready(function(){
 
   setTimeout(updateStatus, updatePeriod);
 
-  setupPlaylistDragging();
+//  setupPlaylistDragging();
 });

@@ -27,7 +27,11 @@ class Watcher
   # add watches, recursively
   def watch(path, excludes)
     Find.find(path) do |e|
-      _watch(e) if File.directory?(e) and not excludes.member?(e)
+      if excludes.member?(e)
+        Find.prune
+      else
+        _watch(e) if File.directory?(e)
+      end
     end
   end
 

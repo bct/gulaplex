@@ -35,7 +35,10 @@ class MediaDB
     return if @files.where(:path => path).first
 
     begin
-      mtime = File.mtime(path)
+      # we use ctime here because sickbeard changes the mtime to the time the
+      # episode aired
+      mtime = File.ctime(path)
+      puts(mtime)
     rescue Errno::ENOENT
       # the file was removed or renamed
       return

@@ -14,6 +14,10 @@ require 'json'
 require 'watcher'
 require 'media_db'
 
+require 'sinatra/default_charset'
+Sinatra.register Sinatra::DefaultCharset
+set :default_charset, 'utf-8'
+
 def show_media_path path
   @root_tree = json_media_path(path)
 
@@ -21,7 +25,7 @@ def show_media_path path
 end
 
 def json_media_path path
-  dir = MEDIA_ROOT + path
+  dir = File.join(MEDIA_ROOT, path)
 
   entries = Dir.entries(dir)
   entries.delete '.'
@@ -36,7 +40,7 @@ def json_media_path path
     File.directory?(full_path) and not File.directory?(File.join(full_path, 'VIDEO_TS'))
   end
   # augment with playcounts
-  fs = fs.sort.reject { |f| f.match(IGNORE_EXTENSIONS) }.map { |f| [f, $db.playcount(MEDIA_ROOT + f)] }
+  fs = fs.sort.reject { |f| f.match(IGNORE_EXTENSIONS) }.map { |f| [f, $db.playcount(File.join(MEDIA_ROOT, f))] }
   { 'directories' => ds.sort, 'files' => fs }.to_json
 end
 
@@ -52,6 +56,8 @@ get /media\/(.*)/ do |path|
 
     json_media_path(path)
   else
+    content_type :html
+
     show_media_path(path)
   end
 end
@@ -73,7 +79,7 @@ get '/search' do
 end
 
 post '/playfile' do
-  $mp.playlist_append(MEDIA_ROOT + params[:path], File.basename(params[:path]))
+  $mp.playlist_append(File.join(MEDIA_ROOT, params[:path]), File.basename(params[:path]))
   ''
 end
 

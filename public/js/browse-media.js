@@ -48,27 +48,12 @@ function addSubtree(parentEl, subtree) {
 
   // add files to the displayed tree
   $.each(subtree.files, function(i, list) {
-    var full_path = list[0];
+    var fullPath  = list[0];
     var playcount = list[1];
 
-    var sub = $("<li class='file cmd'/>");
+    var baseName  = fullPath.split("/").pop();
 
-    var name = $("<span/>");
-    name.text(full_path.split("/").pop());
-    sub.append(name);
-
-    if(playcount) {
-      var pc = $("<span class='playcount'/>");
-      pc.text(playcount);
-      sub.append(pc);
-
-      if(playcount == 0)
-        sub.addClass('unplayed');
-    }
-
-    fileUl.append(sub);
-
-    name.click(playFile(full_path));
+    appendFile(fileUl, baseName, playcount, playFile(fullPath))
   });
 }
 

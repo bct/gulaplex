@@ -11,18 +11,7 @@ $(document).ready(function() {
         var      path = list[0];
         var playcount = list[1];
 
-        var li = $("<li class='file cmd'/>");
-        li.text(path);
-
-        if(playcount) {
-          var pc = $("<span class='playcount'/>")
-          pc.text(playcount);
-          li.append(pc);
-        }
-
-        resultsUl.append(li);
-
-        li.click(playFile(path));
+	appendFile(resultsUl, path, playcount, playFile(path));
       });
 
       if(data.length == 0)

@@ -64,6 +64,27 @@ function playFile(fullPath) {
   };
 }
 
+function appendFile(appendTo, text, playcount, clickCallback) {
+  var li = $("<li class='file cmd'/>");
+
+  var name = $("<span/>");
+  name.text(text);
+  li.append(name);
+
+  if(playcount) {
+    var pc = $("<span class='playcount'/>");
+    pc.text(playcount);
+    li.append(pc);
+
+    if(playcount == 0)
+      li.addClass('unplayed');
+   }
+
+  appendTo.append(li);
+
+  name.click(clickCallback);
+}
+
 function asyncButton(buttonSelector, postUrl) {
   $(buttonSelector).click(function() {
     $.post(postUrl);

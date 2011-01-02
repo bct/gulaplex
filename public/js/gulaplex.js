@@ -66,7 +66,7 @@ function appendFile(appendTo, text, playcount, clickCallback) {
   name.text(text);
   li.append(name);
 
-  if(playcount) {
+  if(playcount != null) {
     var pc = $("<span class='playcount'/>");
     pc.text(playcount);
     li.append(pc);

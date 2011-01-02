@@ -71,7 +71,7 @@ class MediaDB
 
   def playcount(path)
     f = @files[:path => path]
-    f and f[:playcount]
+    f and f[:playcount].to_i
   end
 
   # return urls that match the given query

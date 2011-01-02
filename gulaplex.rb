@@ -145,7 +145,7 @@ get '/status' do
   content_type :json
 
   {
-    'percentPos'  => $mp.percent_pos.to_s,
+    'percentPos'  => $mp.percent_pos,
     'playing'     => $mp.playing_title.to_s,
     'playlist'    => $mp.playlist.map { |f,t| t }
   }.to_json

@@ -1,13 +1,10 @@
-# booble #
-
-what, it's named after the blue-footed booby. pervert.
-(this is what happens when you let your roommate name things)
+# gulaplex #
 
 ## howto ##
 
 1. edit config.rb
-2. ./media_db.rb
-3. ./booble.rb -p 5678
+2. ./media_db.rb          # indexes your media
+3. ./gulaplex.rb -p 5678  # runs the server
 4. http://localhost:5678/
 
 ## requirements ##

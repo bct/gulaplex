@@ -32,10 +32,7 @@ function updateStatus() {
     $("#playing").text(data.playing);
 
     /* update the playlist */
-    if( !window.stopPlaylistUpdates )
-    {
-      currentPlaylist = [];
-
+    if( !window.stopPlaylistUpdates ) {
       var playlist = $("#playlist-entries");
       playlist.empty();
 
@@ -47,8 +44,6 @@ function updateStatus() {
         tr.append(td0);
 
         playlist.append(tr);
-
-        currentPlaylist.push(file);
       });
 
 //      setupPlaylistDragging();

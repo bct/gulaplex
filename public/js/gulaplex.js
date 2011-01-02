@@ -70,10 +70,10 @@ function appendFile(appendTo, text, playcount, clickCallback) {
     var pc = $("<span class='playcount'/>");
     pc.text(playcount);
     li.append(pc);
+  }
 
-    if(playcount == 0)
-      li.addClass('unplayed');
-   }
+  if(!playcount)
+    li.addClass('unplayed');
 
   appendTo.append(li);
 

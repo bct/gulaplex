@@ -38,7 +38,6 @@ class MediaDB
       # we use ctime here because sickbeard changes the mtime to the time the
       # episode aired
       mtime = File.ctime(path)
-      puts(mtime)
     rescue Errno::ENOENT
       # the file was removed or renamed
       return
@@ -65,6 +64,8 @@ class MediaDB
 
   # increment a file's playcount
   def increment_playcount(path)
+    # sometimes files don't end up in the database, add them when played
+    self.new_file(path)
     @files.filter(:path => path).update(:playcount => :playcount + 1)
   end
 

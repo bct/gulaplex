@@ -3,7 +3,6 @@
 
 require 'rubygems'
 require 'sequel'
-require 'find'
 
 class MediaDB
   def initialize uri
@@ -66,7 +65,7 @@ class MediaDB
   def increment_playcount(path)
     # sometimes files don't end up in the database, add them when played
     self.new_file(path)
-    @files.filter(:path => path).update(:playcount => :playcount + 1)
+    @files.filter(:path => path).update(:playcount => Sequel.expr(1) + :playcount)
   end
 
   def playcount(path)
@@ -80,14 +79,16 @@ class MediaDB
   end
 
   def newest
-    @files.filter(:playcount => 0).order(:mtime.desc).limit(10).map do |f|
+    @files.filter(:playcount => 0).reverse_order(:mtime).limit(10).map do |f|
       [ f[:path], f[:path] ]
     end
   end
 end
 
 if __FILE__ == $0
-  require 'config'
+  require 'find'
+
+  require_relative 'config'
 
   db = MediaDB.new(REPO_PATH)
 

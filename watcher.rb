@@ -1,4 +1,4 @@
-#!usr/bin/ruby
+#!/usr/bin/ruby
 
 require 'inotify'
 require 'find'
@@ -129,7 +129,7 @@ end
 
 
 if __FILE__ == $0
-  require 'config'
+  require_relative 'config'
 
   w = Watcher.new
   w.when_directory_created { |p| puts "newdir #{p}" }
@@ -139,7 +139,7 @@ if __FILE__ == $0
   w.when_file_created { |p| puts "newfile #{p}" }
   w.when_file_deleted { |p| puts " nofile #{p}" }
 
-  w.watch(MEDIA_ROOT)
+  w.watch(MEDIA_ROOT, [])
   puts "set up watches, continuing"
   w.go!
 end

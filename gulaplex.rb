@@ -1,18 +1,21 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
+require 'bundler/setup'
+
+require 'rubygems'
 require 'sinatra'
 
 require 'haml'
 
-require 'mplayer'
+require_relative 'mplayer'
 
-require 'config'
+require_relative 'config'
 
 require 'json'
 
-require 'watcher'
-require 'media_db'
+require_relative 'watcher'
+require_relative 'media_db'
 
 require 'sinatra/default_charset'
 Sinatra.register Sinatra::DefaultCharset
